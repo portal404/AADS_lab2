@@ -5,27 +5,23 @@
 
 #define _CRT_SECURE_NO_WARNINGS
 
-
-// This is unironicly one of the worst things i've ever done in my entire life
-// This code sucks
 using namespace std;
 
 
-// Нет точного определения плотной матрицы, ниже в коде это просто обычная матрица
 template <class T>
-class TDenseNormalMatrix
+class TSparseMatrix
 {
 protected:
   TVector<TVector<T>> m;
   int row;
   int col;
 public:
-  TDenseNormalMatrix();
-  TDenseNormalMatrix(int row_, int col_);
-  TDenseNormalMatrix(int row_, int col_, const T& p);
-  TDenseNormalMatrix(const TDenseNormalMatrix& obj);
-  TDenseNormalMatrix(TDenseNormalMatrix&& obj);
-  ~TDenseNormalMatrix();
+  TSparseMatrix();
+  TSparseMatrix(int row_, int col_);
+  TSparseMatrix(int row_, int col_, const T& p);
+  TSparseMatrix(const TSparseMatrix& obj);
+  TSparseMatrix(TSparseMatrix&& obj);
+  ~TSparseMatrix();
 
   int GetRows() const;
   int GetColumns() const;
@@ -37,11 +33,11 @@ public:
   class TIterator
   {
   protected:
-    TDenseNormalMatrix<T>& p;
+    TSparseMatrix<T>& p;
     int row;
     int col;
   public:
-    TIterator(TDenseNormalMatrix<T>& m, int row_, int col_);
+    TIterator(TSparseMatrix<T>& m, int row_, int col_);
     T& operator*();
     TIterator& operator++();
     TIterator& operator++(int);
@@ -53,20 +49,20 @@ public:
   TIterator begin();
   TIterator end();
 
-  TDenseNormalMatrix<T> operator+(const TDenseNormalMatrix<T>& obj);
-  TDenseNormalMatrix<T> operator-(const TDenseNormalMatrix<T>& obj);
-  TDenseNormalMatrix<T> operator*(const TDenseNormalMatrix<T>& obj);
-  TDenseNormalMatrix<T> operator*(const T mul);
+  TSparseMatrix<T> operator+(const TSparseMatrix<T>& obj);
+  TSparseMatrix<T> operator-(const TSparseMatrix<T>& obj);
+  TSparseMatrix<T> operator*(const TSparseMatrix<T>& obj);
+  TSparseMatrix<T> operator*(const T mul);
 
-  TDenseNormalMatrix<T>& operator=(const TDenseNormalMatrix<T>& obj);
-  TDenseNormalMatrix<T>& operator=(TDenseNormalMatrix<T>&& obj);
-  bool operator==(const TDenseNormalMatrix<T>& obj);
-  bool operator!=(const TDenseNormalMatrix<T>& obj);
+  TSparseMatrix<T>& operator=(const TSparseMatrix<T>& obj);
+  TSparseMatrix<T>& operator=(TSparseMatrix<T>&& obj);
+  bool operator==(const TSparseMatrix<T>& obj);
+  bool operator!=(const TSparseMatrix<T>& obj);
 
   template <class O>
-  friend ostream& operator<<(ostream& o, TDenseNormalMatrix<O>& v);
+  friend ostream& operator<<(ostream& o, TSparseMatrix<O>& v);
   template <class I>
-  friend istream& operator>>(istream& i, TDenseNormalMatrix<I>& v);
+  friend istream& operator>>(istream& i, TSparseMatrix<I>& v);
 
   /*
   virtual void SaveToFile(const char* path = "./data.txt");
@@ -82,7 +78,7 @@ public:
 
   // Допы:
   int ValueCount(const T looking_for);
-  TDenseNormalMatrix AllOccurrences(const T value);
+  TSparseMatrix AllOccurrences(const T value);
 
   T FirstNorm() const;
   T SecondNorm() const;
@@ -95,13 +91,13 @@ public:
 
 /// Сам код
 template<class T>
-inline TDenseNormalMatrix<T>::TDenseNormalMatrix(): row(0), col(0)
+inline TSparseMatrix<T>::TSparseMatrix(): row(0), col(0)
 {
 }
 
 template<class T>
-inline TDenseNormalMatrix<T>::TDenseNormalMatrix(int row_, int col_)
-: row(row_), col(col_)
+inline TSparseMatrix<T>::TSparseMatrix(int row_, int col_)
+     : row(row_), col(col_)
 {
   if (row_ < 0 || col_ <0) throw "IndexOutOfRange";
   m.SetLen(row_);
@@ -109,8 +105,8 @@ inline TDenseNormalMatrix<T>::TDenseNormalMatrix(int row_, int col_)
 }
 
 template<class T>
-inline TDenseNormalMatrix<T>::TDenseNormalMatrix(int rows_, int cols_, const T& value)
- : row(rows_), col(cols_)
+inline TSparseMatrix<T>::TSparseMatrix(int rows_, int cols_, const T& value)
+     : row(rows_), col(cols_)
 {
   if (rows_ < 0 || cols_ < 0) throw "Le error";
   m.SetLen(row);
@@ -122,71 +118,71 @@ inline TDenseNormalMatrix<T>::TDenseNormalMatrix(int rows_, int cols_, const T& 
 }
 
 template<class T>
-inline TDenseNormalMatrix<T>::TDenseNormalMatrix(const TDenseNormalMatrix<T> &obj)
-: row(obj.row), col(obj.col)
+inline TSparseMatrix<T>::TSparseMatrix(const TSparseMatrix<T> &obj)
+     : row(obj.row), col(obj.col)
 {
   m.SetLen(row);
   for (int i = 0; i < row; i++) m[i] = obj.m[i];
 }
 
 template<class T>
-inline TDenseNormalMatrix<T>::TDenseNormalMatrix(TDenseNormalMatrix<T> &&obj)
-: m(move(obj.m)), row(obj.row), col(obj.col) // move чтобы не копировать все
+inline TSparseMatrix<T>::TSparseMatrix(TSparseMatrix<T> &&obj)
+     : m(move(obj.m)), row(obj.row), col(obj.col) // move чтобы не копировать все
 {
   obj.row = 0;
   obj.col = 0;
 }
 
 template<class T>
-inline TDenseNormalMatrix<T>::~TDenseNormalMatrix()
+inline TSparseMatrix<T>::~TSparseMatrix()
 {
   row = 0;
   col = 0;
 }
 
 template<class T>
-inline int TDenseNormalMatrix<T>::GetRows() const
+inline int TSparseMatrix<T>::GetRows() const
 {
   return row;
 }
 
 template<class T>
-inline int TDenseNormalMatrix<T>::GetColumns() const
+inline int TSparseMatrix<T>::GetColumns() const
 {
   return col;
 }
 
 template<class T>
-inline TVector<TVector<T>>& TDenseNormalMatrix<T>::GetMatrix()
+inline TVector<TVector<T>>& TSparseMatrix<T>::GetMatrix()
 {
   return m;
 }
 
 template<class T>
-inline const TVector<TVector<T>>& TDenseNormalMatrix<T>::GetMatrix() const
+inline const TVector<TVector<T>>& TSparseMatrix<T>::GetMatrix() const
 {
   return m;
 }
 
 template<class T>
-inline TDenseNormalMatrix<T> TDenseNormalMatrix<T>::operator+(const TDenseNormalMatrix& obj)
+inline TSparseMatrix<T> TSparseMatrix<T>::operator+(const TSparseMatrix& obj)
 {
   int row_ = GetRows();
   int col_ = GetColumns();
   if (row_ != obj.GetRows() || col_ != obj.GetColumns()) throw "Can't plus";
-  TDenseNormalMatrix<T> res(row_, col_);
+  TSparseMatrix<T> res(row_, col_);
   for (int i = 0; i < row_; ++i)
     for (int j = 0; j < col_; ++j) res.m[i][j] = (*this)[i][j] + obj[i][j]; // Если падает + проблема в этой строке
   return res;
 }
 
 template<class T>
-inline TDenseNormalMatrix<T> TDenseNormalMatrix<T>::operator-(const TDenseNormalMatrix& obj)
+inline TSparseMatrix<T> TSparseMatrix<T>::operator-(const TSparseMatrix& obj)
 {
   int row_ = GetRows();
   int col_ = GetColumns();
   if (row_ != obj.GetRows() || col_ != obj.GetColumns()) throw "Can't minus";
-  TDenseNormalMatrix<T> res(row_, col_);
+  TSparseMatrix<T> res(row_, col_);
   for (int i = 0; i < row_; ++i)
     for (int j = 0; j < col_; ++j) res.m[i][j] = (*this)[i][j] - obj[i][j]; // оно работает o_O
   return res;
@@ -194,11 +190,11 @@ inline TDenseNormalMatrix<T> TDenseNormalMatrix<T>::operator-(const TDenseNormal
 
 // Умножение на число
 template<class T>
-inline TDenseNormalMatrix<T> TDenseNormalMatrix<T>::operator*(const T mul)
+inline TSparseMatrix<T> TSparseMatrix<T>::operator*(const T mul)
 {
   int row_ = GetRows();
   int col_ = GetColumns();
-  TDenseNormalMatrix<T> res(row_, col_);
+  TSparseMatrix<T> res(row_, col_);
   if (mul == 0) return res;
   for (int i = 0; i < row_; ++i)
     for (int j = 0; j < col_; ++j) res.m[i][j] = (*this)[i][j] * mul;
@@ -207,12 +203,12 @@ inline TDenseNormalMatrix<T> TDenseNormalMatrix<T>::operator*(const T mul)
 
 // Умножение матриц
 template<class T>
-inline TDenseNormalMatrix<T> TDenseNormalMatrix<T>::operator*(const TDenseNormalMatrix& obj)
+inline TSparseMatrix<T> TSparseMatrix<T>::operator*(const TSparseMatrix& obj)
 {
   int row_ = GetRows();
   int col_ = GetColumns();
   if (row_ != obj.GetColumns()) throw "Cannot multiply";
-  TDenseNormalMatrix<T> res(row_, col_);
+  TSparseMatrix<T> res(row_, col_);
   for (int i = 0; i < row_; ++i)
     for (int j = 0; j < obj.GetColumns(); ++j)
     {
@@ -224,7 +220,7 @@ inline TDenseNormalMatrix<T> TDenseNormalMatrix<T>::operator*(const TDenseNormal
 
 // Присваивает только матрицы одинакогого размера
 template<class T>
-inline TDenseNormalMatrix<T>& TDenseNormalMatrix<T>::operator=(const TDenseNormalMatrix<T>& obj)
+inline TSparseMatrix<T>& TSparseMatrix<T>::operator=(const TSparseMatrix<T>& obj)
 {
   int row = GetRows();
   int col = GetColumns();
@@ -236,7 +232,7 @@ inline TDenseNormalMatrix<T>& TDenseNormalMatrix<T>::operator=(const TDenseNorma
 
 // Посмотреть где отличия (upd 18.10.25 я не посмотрел)
 template<class T>
-inline TDenseNormalMatrix<T>& TDenseNormalMatrix<T>::operator=(TDenseNormalMatrix<T>&& obj)
+inline TSparseMatrix<T>& TSparseMatrix<T>::operator=(TSparseMatrix<T>&& obj)
 {
   if (this != &obj) {
     m = std::move(obj.m);
@@ -248,7 +244,7 @@ inline TDenseNormalMatrix<T>& TDenseNormalMatrix<T>::operator=(TDenseNormalMatri
   return *this;
 }
 template<class T>
-inline bool TDenseNormalMatrix<T>::operator==(const TDenseNormalMatrix<T>& obj)
+inline bool TSparseMatrix<T>::operator==(const TSparseMatrix<T>& obj)
 {
   int row = GetRows();
   int col = GetColumns();
@@ -260,14 +256,14 @@ inline bool TDenseNormalMatrix<T>::operator==(const TDenseNormalMatrix<T>& obj)
 }
 
 template<class T>
-inline bool TDenseNormalMatrix<T>::operator!=(const TDenseNormalMatrix<T>& obj)
+inline bool TSparseMatrix<T>::operator!=(const TSparseMatrix<T>& obj)
 {
   return !(*this == obj);
 }
 
 // Output (not sure if it works)
 template <class O>
-inline ostream& operator<<(ostream& o, TDenseNormalMatrix<O>& p)
+inline ostream& operator<<(ostream& o, TSparseMatrix<O>& p)
 {
   int row_ = p.GetRows();
   int col_ = p.GetColumns();
@@ -284,7 +280,7 @@ inline ostream& operator<<(ostream& o, TDenseNormalMatrix<O>& p)
 
 // Input
 template <class I>
-inline istream& operator>>(istream& is, TDenseNormalMatrix<I>& p)
+inline istream& operator>>(istream& is, TSparseMatrix<I>& p)
 {
   int row = p.GetRows();
   int col = p.GetColumns();
@@ -302,17 +298,17 @@ inline istream& operator>>(istream& is, TDenseNormalMatrix<I>& p)
 
 // ----------------
 template<class T>
-inline TDenseNormalMatrix<T>::TIterator::TIterator(TDenseNormalMatrix<T>& m, int row_, int col_)
-  : p(m), row(row_), col(col_){}
+inline TSparseMatrix<T>::TIterator::TIterator(TSparseMatrix<T>& m, int row_, int col_)
+     : p(m), row(row_), col(col_){}
 
 template<class T>
-inline T& TDenseNormalMatrix<T>::TIterator::operator*()
+inline T& TSparseMatrix<T>::TIterator::operator*()
 {
   return p[row][col];
 }
 
 template<class T>
-inline typename TDenseNormalMatrix<T>::TIterator& TDenseNormalMatrix<T>::TIterator::operator++()
+inline typename TSparseMatrix<T>::TIterator& TSparseMatrix<T>::TIterator::operator++()
 {
   ++col;
   if (col >= p.GetColumns())
@@ -324,25 +320,25 @@ inline typename TDenseNormalMatrix<T>::TIterator& TDenseNormalMatrix<T>::TIterat
 }
 
 template<class T>
-inline bool TDenseNormalMatrix<T>::TIterator::operator==(const TIterator& f) const
+inline bool TSparseMatrix<T>::TIterator::operator==(const TIterator& f) const
 {
   return p == f.p && row == f.row && col == f.col;
 }
 
 template<class T>
-inline bool TDenseNormalMatrix<T>::TIterator::operator!=(const TIterator& f)
+inline bool TSparseMatrix<T>::TIterator::operator!=(const TIterator& f)
 {
   return !(*this == f);
 }
 
 template<class T>
-inline typename TDenseNormalMatrix<T>::TIterator TDenseNormalMatrix<T>::begin()
+inline typename TSparseMatrix<T>::TIterator TSparseMatrix<T>::begin()
 {
   return Iterator(this, 0, 0);
 }
 
 template<class T>
-inline typename TDenseNormalMatrix<T>::TIterator TDenseNormalMatrix<T>::end()
+inline typename TSparseMatrix<T>::TIterator TSparseMatrix<T>::end()
 {
   return Iterator(this, row, 0);
 }
@@ -353,7 +349,7 @@ inline typename TDenseNormalMatrix<T>::TIterator TDenseNormalMatrix<T>::end()
 /* Убрал чтобы не захламлять. Оно работает, главное верить
 
 template<class T>
-inline void TDenseNormalMatrix<T>::SaveToFile(const char* path)
+inline void TSparseMatrix<T>::SaveToFile(const char* path)
 {
   ofstream FileLoc(path);
   if (!FileLoc.is_open()) throw "File dosen't work";
@@ -371,7 +367,7 @@ inline void TDenseNormalMatrix<T>::SaveToFile(const char* path)
 }
 
 template<class T>
-inline void TDenseNormalMatrix<T>::ReadFromFile(const char* path)
+inline void TSparseMatrix<T>::ReadFromFile(const char* path)
 {
   ifstream FileLoc(path);
   if (!FileLoc.is_open()) throw "File dosen't work";
@@ -390,7 +386,7 @@ inline void TDenseNormalMatrix<T>::ReadFromFile(const char* path)
 */
 
 template<class T>
-inline TVector<T>& TDenseNormalMatrix<T>::operator[](int row_)
+inline TVector<T>& TSparseMatrix<T>::operator[](int row_)
 {
   if (row_ < 0 || row_ >= row)
     throw std::out_of_range("Row index out of range");
@@ -398,32 +394,32 @@ inline TVector<T>& TDenseNormalMatrix<T>::operator[](int row_)
 }
 
 template<class T>
-inline const TVector<T>& TDenseNormalMatrix<T>::operator[](int row_) const
+inline const TVector<T>& TSparseMatrix<T>::operator[](int row_) const
 {
   if (row_ < 0 || row_ >= row) throw "Index out of range!";
   return m[row_];
 }
 
 template<class T>
-inline bool TDenseNormalMatrix<T>::IsEmpty() const
+inline bool TSparseMatrix<T>::IsEmpty() const
 {
   return row == 0 || col == 0;
 }
 
 template<class T>
-inline bool TDenseNormalMatrix<T>::IsFull() const
+inline bool TSparseMatrix<T>::IsFull() const
 {
   return false; // 0 clues how this method even supposed to work, math gives no clear definition of a "full" matrix
 }
 
 template<class T>
-inline void TDenseNormalMatrix<T>::ApplyToAll(const function<void(T&)>& func)
+inline void TSparseMatrix<T>::ApplyToAll(const function<void(T&)>& func)
 {
   m.ApplyToAll(func);
 }
 
 template<class T>
-inline void TDenseNormalMatrix<T>::ApplyToAll(const function<void(const T&)>& func) const
+inline void TSparseMatrix<T>::ApplyToAll(const function<void(const T&)>& func) const
 {
   m.ApplyToAll(func);
 }
@@ -432,7 +428,7 @@ inline void TDenseNormalMatrix<T>::ApplyToAll(const function<void(const T&)>& fu
 // Допы:
 
 template<class T>
-T TDenseNormalMatrix<T>::FirstNorm() const
+T TSparseMatrix<T>::FirstNorm() const
 {
   T maxSum = 0;
   for (int j = 0; j < col; ++j)
@@ -446,7 +442,7 @@ T TDenseNormalMatrix<T>::FirstNorm() const
 }
 
 template<class T>
-T TDenseNormalMatrix<T>::SecondNorm() const
+T TSparseMatrix<T>::SecondNorm() const
 {
   T sum = 0;
   for (int i = 0; i < row; ++i)
@@ -456,7 +452,7 @@ T TDenseNormalMatrix<T>::SecondNorm() const
 }
 
 template<class T>
-T TDenseNormalMatrix<T>::HolderNorm(T p) const
+T TSparseMatrix<T>::HolderNorm(T p) const
 {
   T sum = 0;
   for (int i = 0; i < row; ++i)
@@ -466,7 +462,7 @@ T TDenseNormalMatrix<T>::HolderNorm(T p) const
 }
 
 template<class T>
-T TDenseNormalMatrix<T>::InfinityNorm() const
+T TSparseMatrix<T>::InfinityNorm() const
 {
   T maxSum = 0;
   for (int i = 0; i < row; ++i)
@@ -480,7 +476,7 @@ T TDenseNormalMatrix<T>::InfinityNorm() const
 }
 
 template <class T>
-inline int TDenseNormalMatrix<T>::ValueCount(const T looking_for)
+inline int TSparseMatrix<T>::ValueCount(const T looking_for)
 {
   int count = 0;
   auto& matrix = GetMatrix();
@@ -494,7 +490,7 @@ inline int TDenseNormalMatrix<T>::ValueCount(const T looking_for)
 }
 
 template <class T>
-inline TDenseNormalMatrix<T> TDenseNormalMatrix<T>::AllOccurrences(const T value)
+inline TSparseMatrix<T> TSparseMatrix<T>::AllOccurrences(const T value)
 {
   int rows = GetRows();
   int cols = GetColumns();
@@ -504,7 +500,7 @@ inline TDenseNormalMatrix<T> TDenseNormalMatrix<T>::AllOccurrences(const T value
     for (int j = 0; j < cols; ++j)
       if ((*this)[i][j] == value) count++;
 
-  TDenseNormalMatrix<T> ans(count, 2);
+  TSparseMatrix<T> ans(count, 2);
 
   int n = 0;
   for (int i = 0; i < rows; ++i)

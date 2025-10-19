@@ -71,8 +71,8 @@ public:
   void ApplyToAll(const function<void(T&)>& func);
   void ApplyToAll(const function<void(const T&)>& func) const;
 
-  int ValueCount(const T looking_for); // Количество вхождений доп номер 2
-  TTriangleMatrix AllOccurrences(const T value); // Все вхождения значения доп номер 3
+  int ValueCount(const T looking_for); // Количество вхождений доп
+  TTriangleMatrix AllOccurrences(const T value); // Все вхождения значения доп
 
   T FirstNorm() const;
   T SecondNorm() const;
@@ -346,6 +346,45 @@ inline void TTriangleMatrix<T>::ApplyToAll(const function<void(const T&)>& func)
 {
   data.ApplyToAll(func);
 }
+
+/* Убрал чтобы не захламлять. Оно работает, главное верить х2
+
+template<class T>
+inline void TDenseNormalMatrix<T>::SaveToFile(const char* path)
+{
+  ofstream FileLoc(path);
+  if (!FileLoc.is_open()) throw "File dosen't work";
+  if (FileLoc.is_open())
+  {
+    FileLoc << GetRows() << "\n";
+    FileLoc << GetColumns() << "\n";
+    for (int i = 0; i < GetRows(); ++i)
+    {
+      for (int j = 0; j < GetColumns(); ++j)
+        FileLoc << (*this)[i][j] << "\n";
+    }
+  }
+  FileLoc.close();
+}
+
+template<class T>
+inline void TDenseNormalMatrix<T>::ReadFromFile(const char* path)
+{
+  ifstream FileLoc(path);
+  if (!FileLoc.is_open()) throw "File dosen't work";
+  if (FileLoc.is_open())
+  {
+    int row_ = 0, col_ = 0;
+    FileLoc >> row_;
+    FileLoc >> col_;
+    if (row_ != GetRows() || col_ != GetColumns()) throw "Cannot read, the size is different";
+    for (int i = 0; i < row_; ++i)
+      for (int j = 0; j < col_; ++j)
+        FileLoc >> (*this)[i][j];
+  }
+  FileLoc.close();
+}
+*/
 
 template<class T>
 T TTriangleMatrix<T>::FirstNorm() const
