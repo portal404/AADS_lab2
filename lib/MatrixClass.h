@@ -11,6 +11,7 @@
 using namespace std;
 
 
+// Нет точного определения плотной матрицы, ниже в коде это просто обычная матрица
 template <class T>
 class TDenseNormalMatrix
 {
@@ -31,6 +32,27 @@ public:
   TVector<TVector<T>>& GetMatrix();
   const TVector<TVector<T>>& GetMatrix() const;
 
+  // Класс итератора
+
+  class TIterator
+  {
+  protected:
+    TDenseNormalMatrix<T>& p;
+    int row;
+    int col;
+  public:
+    TIterator(TDenseNormalMatrix<T>& m, int row_, int col_);
+    T& operator*();
+    TIterator& operator++();
+    TIterator& operator++(int);
+    bool operator==(const TIterator& f) const;
+    bool operator!= (const TIterator& f);
+  };
+
+
+  TIterator begin();
+  TIterator end();
+
   TDenseNormalMatrix<T> operator+(const TDenseNormalMatrix<T>& obj);
   TDenseNormalMatrix<T> operator-(const TDenseNormalMatrix<T>& obj);
   TDenseNormalMatrix<T> operator*(const TDenseNormalMatrix<T>& obj);
@@ -39,6 +61,7 @@ public:
   TDenseNormalMatrix<T>& operator=(const TDenseNormalMatrix<T>& obj);
   TDenseNormalMatrix<T>& operator=(TDenseNormalMatrix<T>&& obj);
   bool operator==(const TDenseNormalMatrix<T>& obj);
+  bool operator!=(const TDenseNormalMatrix<T>& obj);
 
   template <class O>
   friend ostream& operator<<(ostream& o, TDenseNormalMatrix<O>& v);
@@ -57,27 +80,17 @@ public:
   void ApplyToAll(const function<void(T&)>& func);
   void ApplyToAll(const function<void(const T&)>& func) const;
 
-  int ValueCount(const T looking_for); // Количество вхождений доп номер 2
-  TDenseNormalMatrix AllOccurrences(const T value); // Все вхождения значения доп номер 3
+  // Допы:
+  int ValueCount(const T looking_for);
+  TDenseNormalMatrix AllOccurrences(const T value);
+
+  T FirstNorm() const;
+  T SecondNorm() const;
+  T HolderNorm(T p) const;
+  T InfinityNorm() const;
 };
 
 
-// Класс итератора
-
-template<class T>
-class TIterator
-{
-protected:
-  TDenseNormalMatrix<T>& p;
-  int row;
-  int col;
-public:
-  TIterator(TDenseNormalMatrix<T>& m, int row_, int col_);
-  T& operator*();
-  TIterator& operator++();
-  TIterator& operator++(int);
-  bool operator != (const TIterator& p);
-};
 
 
 /// Сам код
@@ -175,7 +188,7 @@ inline TDenseNormalMatrix<T> TDenseNormalMatrix<T>::operator-(const TDenseNormal
   if (row_ != obj.GetRows() || col_ != obj.GetColumns()) throw "Can't minus";
   TDenseNormalMatrix<T> res(row_, col_);
   for (int i = 0; i < row_; ++i)
-    for (int j = 0; j < col_; ++j) res.m[i][j] = (*this)[i][j] - obj[i][j]; // Тут тоже смотреть (*this) если не робит
+    for (int j = 0; j < col_; ++j) res.m[i][j] = (*this)[i][j] - obj[i][j]; // оно работает o_O
   return res;
 }
 
@@ -246,8 +259,13 @@ inline bool TDenseNormalMatrix<T>::operator==(const TDenseNormalMatrix<T>& obj)
   return flag;
 }
 
+template<class T>
+inline bool TDenseNormalMatrix<T>::operator!=(const TDenseNormalMatrix<T>& obj)
+{
+  return !(*this == obj);
+}
 
-// Output i really hope it works
+// Output (not sure if it works)
 template <class O>
 inline ostream& operator<<(ostream& o, TDenseNormalMatrix<O>& p)
 {
@@ -263,7 +281,8 @@ inline ostream& operator<<(ostream& o, TDenseNormalMatrix<O>& p)
   }
   return o;
 }
-// Input plz work lol
+
+// Input
 template <class I>
 inline istream& operator>>(istream& is, TDenseNormalMatrix<I>& p)
 {
@@ -280,7 +299,59 @@ inline istream& operator>>(istream& is, TDenseNormalMatrix<I>& p)
   }
   return is;
 }
-/*
+
+// ----------------
+template<class T>
+inline TDenseNormalMatrix<T>::TIterator::TIterator(TDenseNormalMatrix<T>& m, int row_, int col_)
+  : p(m), row(row_), col(col_){}
+
+template<class T>
+inline T& TDenseNormalMatrix<T>::TIterator::operator*()
+{
+  return p[row][col];
+}
+
+template<class T>
+inline typename TDenseNormalMatrix<T>::TIterator& TDenseNormalMatrix<T>::TIterator::operator++()
+{
+  ++col;
+  if (col >= p.GetColumns())
+  {
+    col = 0;
+    ++row;
+  }
+  return *this;
+}
+
+template<class T>
+inline bool TDenseNormalMatrix<T>::TIterator::operator==(const TIterator& f) const
+{
+  return p == f.p && row == f.row && col == f.col;
+}
+
+template<class T>
+inline bool TDenseNormalMatrix<T>::TIterator::operator!=(const TIterator& f)
+{
+  return !(*this == f);
+}
+
+template<class T>
+inline typename TDenseNormalMatrix<T>::TIterator TDenseNormalMatrix<T>::begin()
+{
+  return Iterator(this, 0, 0);
+}
+
+template<class T>
+inline typename TDenseNormalMatrix<T>::TIterator TDenseNormalMatrix<T>::end()
+{
+  return Iterator(this, row, 0);
+}
+
+// ----------------------
+
+
+/* Убрал чтобы не захламлять
+
 template<class T>
 inline void TDenseNormalMatrix<T>::SaveToFile(const char* path)
 {
@@ -317,6 +388,96 @@ inline void TDenseNormalMatrix<T>::ReadFromFile(const char* path)
   FileLoc.close();
 }
 */
+
+template<class T>
+inline TVector<T>& TDenseNormalMatrix<T>::operator[](int row_)
+{
+  if (row_ < 0 || row_ >= row)
+    throw std::out_of_range("Row index out of range");
+  return m[row_];
+}
+
+template<class T>
+inline const TVector<T>& TDenseNormalMatrix<T>::operator[](int row_) const
+{
+  if (row_ < 0 || row_ >= row) throw "Index out of range!";
+  return m[row_];
+}
+
+template<class T>
+inline bool TDenseNormalMatrix<T>::IsEmpty() const
+{
+  return row == 0 || col == 0;
+}
+
+template<class T>
+inline bool TDenseNormalMatrix<T>::IsFull() const
+{
+  return false; // 0 clues how this method even supposed to work, math gives no clear definition of a "full" matrix
+}
+
+template<class T>
+inline void TDenseNormalMatrix<T>::ApplyToAll(const function<void(T&)>& func)
+{
+  m.ApplyToAll(func);
+}
+
+template<class T>
+inline void TDenseNormalMatrix<T>::ApplyToAll(const function<void(const T&)>& func) const
+{
+  m.ApplyToAll(func);
+}
+
+
+// Допы:
+
+template<class T>
+T TDenseNormalMatrix<T>::FirstNorm() const
+{
+  T maxSum = 0;
+  for (int j = 0; j < col; ++j)
+  {
+    T sum = 0;
+    for (int i = 0; i < row; ++i)
+      sum += std::abs(m[i][j]);
+    if (sum > maxSum) maxSum = sum;
+  }
+  return maxSum;
+}
+
+template<class T>
+T TDenseNormalMatrix<T>::SecondNorm() const
+{
+  T sum = 0;
+  for (int i = 0; i < row; ++i)
+    for (int j = 0; j < col; ++j)
+      sum += m[i][j] * m[i][j];
+  return sqrt(sum);
+}
+
+template<class T>
+T TDenseNormalMatrix<T>::HolderNorm(T p) const
+{
+  T sum = 0;
+  for (int i = 0; i < row; ++i)
+    for (int j = 0; j < col; ++j)
+      sum += pow(std::abs(m[i][j]), p);
+  return pow(sum, T(1) / p);
+}
+
+template<class T>
+T TDenseNormalMatrix<T>::InfinityNorm() const
+{
+  T maxSum = 0;
+  for (int i = 0; i < row; ++i)
+  {
+    T sum = 0;
+    for (int j = 0; j < col; ++j)
+      sum += std::abs(m[i][j]);
+    if (sum > maxSum) maxSum = sum;
+  }
+  return maxSum;
+}
 
 template <class T>
 inline int TDenseNormalMatrix<T>::ValueCount(const T looking_for)
@@ -363,27 +524,3 @@ inline TDenseNormalMatrix<T> TDenseNormalMatrix<T>::AllOccurrences(const T value
   }
   return ans;
 }
-
-
-template<class T>
-inline TVector<T>& TDenseNormalMatrix<T>::operator[](int row_)
-{
-  if (row_ < 0 || row_ >= row)
-    throw std::out_of_range("Row index out of range");
-  return m[row_];
-}
-
-template<class T>
-inline const TVector<T>& TDenseNormalMatrix<T>::operator[](int row_) const
-{
-  if (row_ < 0 || row_ >= row)
-    throw std::out_of_range("Row index out of range");
-  return m[row_];
-}
-
-template<class T>
-inline bool TDenseNormalMatrix<T>::IsEmpty() const
-{
-  return row == 0 || col == 0;
-}
-
